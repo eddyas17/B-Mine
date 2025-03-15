@@ -108,6 +108,5 @@ Route::get('/verifikasi/{kode}', [PersonalTaskController::class, 'scanQR'])->nam
 
 // Authentication
 Route::get('/login', [AuthController::class,'login'])->name('login');
-Route::get('/logout', [AuthController::class,'logout'])->name('logout');
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::match(['get', 'post'], '/logout', [AuthController::class, 'logout'])->name('logout');
 Route::post('/auth', [AuthController::class, 'auth'])->name('auth');
