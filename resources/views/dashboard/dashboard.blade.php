@@ -227,14 +227,26 @@
                 <div class="col-md-12">
                     <div class="card card-success">
                         <div class="card-header">
-                            <h3 class="card-title">Outstanding Submission Simper & Mine Permit</h3>
+                            <h3 class="card-title">Statistik Pengajuan SIMPER & Mine Permit</h3>
                             <div class="card-tools">
+                                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                    <i class="fas fa-minus"></i>
+                                </button>
                             </div>
                         </div>
                         <div class="card-body">
-                            <div class="chart">
-                                <canvas id="simperMinePermitChart" width="auto" height="auto"></canvas>
+                            <div class="chart-container" style="position: relative; height:300px;">
+                                <canvas id="simperMinePermitChart"></canvas>
                             </div>
+
+                            <!-- Filter tahunan (opsional) -->
+                            {{-- <div class="mt-3">
+                                <select id="yearFilter" class="form-control" style="width: 150px;">
+                                    <option value="2025">2025</option>
+                                    <option value="2024">2024</option>
+                                    <option value="2023">2023</option>
+                                </select>
+                            </div> --}}
                         </div>
                     </div>
                 </div>
@@ -250,58 +262,96 @@
         //--------------
 
         // Get context with jQuery - using jQuery's .get() method.
-        var ctx = document.getElementById('simperMinePermitChart').getContext('2d');
 
-        var simperMinePermitChart = new Chart(ctx, {
-            type: 'line', // Menggunakan line chart untuk menampilkan trend
-            data: {
-                labels: [
-                    'January', 'February', 'March', 'April', 'May', 'June',
-                    'July', 'August', 'September', 'October', 'November', 'December'
-                ], // Label bulan dalam setahun
-                datasets: [{
-                        label: 'Pengajuan SIMPER', // Label untuk SIMPER
-                        data: [70, 26, 33, 32, 99, 45, 65, 9, 87, 33, 54, 66,
-                            90
-                        ], // Data pengajuan SIMPER bulanan
-                        borderColor: '#3498db', // Warna biru untuk SIMPER
-                        fill: false, // Garis tanpa fill
-                        tension: 0.1 // Smooth curve di antara titik
-                    },
-                    {
-                        label: 'Pengajuan Mine Permit', // Label untuk Mine Permit
-                        data: [32, 44, 55, 33, 43, 54, 65, 22, 22, 33, 44,
-                            5
-                        ], // Data pengajuan Mine Permit bulanan
-                        borderColor: '#00a65a', // Warna hijau untuk Mine Permit
-                        fill: true, // Garis tanpa fill
-                        tension: 0.1 // Smooth curve di antara titik
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    x: { // Konfigurasi untuk sumbu X (bulan)
-                        title: {
-                            display: true,
-                            text: 'Bulan' // Label sumbu X
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Referensi ke elemen filter tahun
+            const yearFilter = document.getElementById('yearFilter');
+
+            // Get context untuk chart
+            var ctx = document.getElementById('simperMinePermitChart').getContext('2d');
+
+            // Inisialisasi chart dengan data awal (kosong)
+            var simperMinePermitChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [
+                        'January', 'February', 'March', 'April', 'May', 'June',
+                        'July', 'August', 'September', 'October', 'November', 'December'
+                    ],
+                    datasets: [{
+                            label: 'Pengajuan SIMPER',
+                            data: [], // Kosong, akan diisi dari database
+                            borderColor: '#3498db',
+                            fill: false,
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Pengajuan Mine Permit',
+                            data: [], // Kosong, akan diisi dari database
+                            borderColor: '#00a65a',
+                            fill: false,
+                            tension: 0.1
                         }
-                    },
-                    y: { // Konfigurasi untuk sumbu Y (jumlah pengajuan)
-                        beginAtZero: true, // Memulai sumbu Y dari nol
-                        title: {
-                            display: true,
-                            text: 'Jumlah Pengajuan' // Label sumbu Y
-                        }
-                    }
+                    ]
                 },
-                plugins: {
-                    legend: {
-                        display: true, // Tampilkan label legend
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Bulan'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Jumlah Pengajuan'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: function(tooltipItems) {
+                                    return tooltipItems[0].label + ' ' + yearFilter.value;
+                                }
+                            }
+                        }
                     }
                 }
+            });
+
+            // Fungsi untuk mengambil data berdasarkan tahun yang dipilih
+            function fetchDataByYear(year) {
+                fetch(`/api/permit-requests?year=${year}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Perbarui data chart
+                        simperMinePermitChart.data.datasets[0].data = data.simper;
+                        simperMinePermitChart.data.datasets[1].data = data.minePermit;
+
+                        // Update chart
+                        simperMinePermitChart.update();
+                    })
+                    .catch(error => {
+                        console.error('Error fetching data:', error);
+                    });
             }
+
+            // Panggil untuk data tahun yang dipilih saat halaman dimuat
+            fetchDataByYear(yearFilter.value);
+
+            // Event listener untuk perubahan filter tahun
+            yearFilter.addEventListener('change', function() {
+                fetchDataByYear(this.value);
+            });
         });
 
         // donat

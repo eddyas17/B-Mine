@@ -15,8 +15,9 @@ use App\Http\Controllers\CompletedController;
 
 Route::middleware(['web', EnsureUserIsLoggedIn::class])->group(function () {
    // Dashboard
-   Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-   Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::get('/{path?}', [DashboardController::class, 'index'])
+    ->where('path', 'dashboard|')
+    ->name('dashboard');
    Route::get('/about', [DashboardController::class, 'about'])->name('about');
 
    // Personal Tasks
@@ -80,7 +81,7 @@ Route::middleware(['web', EnsureUserIsLoggedIn::class])->group(function () {
    Route::get('/approve_data_bec/{kode}', [PersonalTaskController::class, 'approveDataBec'])->name('approveDataBec');
    Route::get('/approve_data_ktt/{kode}', [PersonalTaskController::class, 'approveDataKtt'])->name('approveDataKtt');
 
-   Route::post('/reject-request/{kode}', [PersonalTaskController::class, 'rejectRequest'])->name('reject.request');
+//    Route::post('/reject-request/{kode}', [PersonalTaskController::class, 'rejectRequest'])->name('reject.request');
    Route::put('/clear-reject-history/{kode}', [PersonalTaskController::class, 'clearRejectHistory'])->name('clear.reject.history');
 
     // PRINT ID CARD
@@ -92,6 +93,14 @@ Route::middleware(['web', EnsureUserIsLoggedIn::class])->group(function () {
    Route::get('/qrcode', [QrcodeController::class,'index'])->name('qrcode');
    Route::get('/generatePDF', [QrcodeController::class,'generatePDF'])->name('generatePDF');
    Route::get('/karyawanfolder', [RequestController::class,'karyawanfolder'])->name('karyawanfolder');
+
+// Chart
+
+// Route untuk mendapatkan data chart
+Route::get('/api/permit-requests', [DashboardController::class, 'getPermitRequestsData']);
+
+// Route untuk data chart dengan rentang kustom
+Route::post('/api/permit-requests/custom', [DashboardController::class, 'getCustomRangeData']);
 });
 
 // Public route untuk QR code scan
